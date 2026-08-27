@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Portal · Liquid Glass Demo (Work)</title>
+  <style>
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: #1a1a1a;
+      overflow-x: hidden;
+    }
+
+    /* ========== Background (simulates Bing daily wallpaper) ========== */
+    body {
+      background: 
+        linear-gradient(180deg, rgba(255,255,255,0.15) 0%, transparent 40%),
+        url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=80') center/cover no-repeat fixed;
+      background-color: #a8c5d4;
+      min-height: 100vh;
+    }
+
+    /* ========== Layout ========== */
+    .portal {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 24px;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 32px 48px;
+      min-height: 100vh;
+    }
+
+    /* ========== Shared Liquid Glass tokens ========== */
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.52);
+      --glass-bg-strong: rgba(255, 255, 255, 0.68);
+      --glass-border: rgba(255, 255, 255, 0.72);
+      --glass-blur: 32px;
+      --glass-saturate: 1.45;
+      --radius: 22px;
+      --shadow-soft: 0 8px 32px rgba(0,0,0,0.08);
+      --cat-work: #f5a623;
+      --cat-network: #00c2ff;
+      --cat-repo: #00c853;
+      --cat-ai: #9b59b6;
+      --cat-academic: #ff6b6b;
+      --cat-cloud: #a855f7;
+      --ink: #1a1a1a;
+      --ink-muted: #4a4a4a;
+      --ink-faint: #7a7a7a;
+    }
+
+    /* ========== Liquid Glass Card ========== */
+    .glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius);
+      box-shadow:
+        var(--shadow-soft),
+        0 1.5px 0 rgba(255,255,255,0.9) inset,   /* top specular highlight */
+        0 -1px 0 rgba(0,0,0,0.04) inset;
+      transition: transform 0.35s cubic-bezier(0.4,0,0.2,1), box-shadow 0.35s;
+    }
+
+    .glass:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        0 14px 40px rgba(0,0,0,0.12),
+        0 1.5px 0 rgba(255,255,255,0.95) inset,
+        0 -1px 0 rgba(0,0,0,0.04) inset;
+    }
+
+    /* ========== Sidebar ========== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      position: sticky;
+      top: 28px;
+      height: fit-content;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      padding: 6px;
+      border-radius: 999px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 10px 0;
+      text-align: center;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: var(--ink-muted);
+      transition: all 0.25s;
+    }
+
+    .tab.active {
+      background: rgba(255,255,255,0.85);
+      color: var(--ink);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .nav-list {
+      list-style: none;
+      padding: 8px 0;
+    }
+
+    .nav-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      color: var(--ink);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .nav-item:hover {
+      background: rgba(255,255,255,0.35);
+    }
+
+    .nav-item .count {
+      font-size: 12px;
+      color: var(--ink-faint);
+      background: rgba(0,0,0,0.05);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* ========== Main ========== */
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .clock {
+      font-size: 48px;
+      font-weight: 300;
+      letter-spacing: -1px;
+      color: #fff;
+      text-shadow: 0 2px 12px rgba(0,0,0,0.25);
+      line-height: 1;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 280px;
+      max-width: 520px;
+      padding: 14px 22px;
+      border-radius: 999px;
+      font-size: 15px;
+      border: 1px solid var(--glass-border);
+      background: var(--glass-bg-strong);
+      backdrop-filter: blur(24px) saturate(1.4);
+      -webkit-backdrop-filter: blur(24px) saturate(1.4);
+      color: var(--ink);
+      outline: none;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.06), 0 1px 0 rgba(255,255,255,0.8) inset;
+    }
+
+    .search::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .shortcuts {
+      padding: 12px 16px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .shortcuts span {
+      font-size: 13px;
+      color: var(--ink-muted);
+      margin-right: 4px;
+    }
+
+    .dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.6);
+      border: 1px solid rgba(255,255,255,0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .dot:hover { transform: scale(1.12); }
+
+    /* ========== Cards Grid ========== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      padding: 18px 20px 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Category colored left border + soft wash */
+    .card[data-cat="work"] {
+      border-left: 4px solid var(--cat-work);
+      background: linear-gradient(90deg, rgba(245,166,35,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+    .card[data-cat="network"] {
+      border-left: 4px solid var(--cat-network);
+      background: linear-gradient(90deg, rgba(0,194,255,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+    .card[data-cat="repo"] {
+      border-left: 4px solid var(--cat-repo);
+      background: linear-gradient(90deg, rgba(0,200,83,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+    .card[data-cat="ai"] {
+      border-left: 4px solid var(--cat-ai);
+      background: linear-gradient(90deg, rgba(155,89,182,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+    .card[data-cat="academic"] {
+      border-left: 4px solid var(--cat-academic);
+      background: linear-gradient(90deg, rgba(255,107,107,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+    .card[data-cat="cloud"] {
+      border-left: 4px solid var(--cat-cloud);
+      background: linear-gradient(90deg, rgba(168,85,247,0.14) 0%, transparent 42%), var(--glass-bg);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 650;
+      color: var(--ink);
+    }
+
+    .card-desc {
+      font-size: 12px;
+      color: var(--ink-muted);
+      margin-top: 2px;
+    }
+
+    .card-count {
+      font-size: 12px;
+      color: var(--ink-faint);
+      background: rgba(0,0,0,0.05);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    .links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .link {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 7px 10px;
+      border-radius: 12px;
+      text-decoration: none;
+      color: var(--ink);
+      font-size: 13.5px;
+      transition: background 0.2s;
+    }
+
+    .link:hover {
+      background: rgba(255,255,255,0.45);
+    }
+
+    .link .icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: rgba(0,0,0,0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .link .url {
+      margin-left: auto;
+      font-size: 11px;
+      color: var(--ink-faint);
+      max-width: 110px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* ========== Footer note ========== */
+    .note {
+      text-align: center;
+      font-size: 13px;
+      color: rgba(255,255,255,0.85);
+      text-shadow: 0 1px 4px rgba(0,0,0,0.3);
+      margin-top: 12px;
+      padding: 12px;
+    }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 900px) {
+      .portal {
+        grid-template-columns: 1fr;
+        padding: 16px;
+      }
+      .sidebar { position: static; }
+      .clock { font-size: 36px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="glass tabs">
+        <button class="tab active">工作</button>
+        <button class="tab">生活</button>
+      </div>
+
+      <div class="glass" style="padding: 12px 8px;">
+        <ul class="nav-list">
+          <li class="nav-item"><span>工作台</span><span class="count">77</span></li>
+          <li class="nav-item"><span>日常工作</span><span class="count">7</span></li>
+          <li class="nav-item"><span>云主机</span><span class="count">8</span></li>
+          <li class="nav-item"><span>网络检测</span><span class="count">10</span></li>
+          <li class="nav-item"><span>项目与仓库</span><span class="count">1</span></li>
+          <li class="nav-item"><span>AI与多媒体</span><span class="count">7</span></li>
+          <li class="nav-item"><span>学术文献</span><span class="count">8</span></li>
+        </ul>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="top-bar">
+        <div class="clock">23:56</div>
+        <input class="search" type="text" placeholder="搜索工作工具，回车用 Google 打开…" />
+        <div class="glass shortcuts">
+          <span>工作快捷</span>
+          <div class="dot">⚡</div>
+          <div class="dot">🔗</div>
+          <div class="dot">📊</div>
+          <div class="dot">🛠</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <!-- 日常工作 -->
+        <article class="glass card" data-cat="work">
+          <div class="card-header">
+            <div>
+              <div class="card-title">日常工作</div>
+              <div class="card-desc">每天会打开的控制台</div>
+            </div>
+            <span class="card-count">7</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">☁️</span> Cloudflare <span class="url">dash.cloudflare.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐙</span> GitHub <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🅰️</span> 阿里云控制台 <span class="url">console.aliyun.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">💚</span> 阿里云健康 <span class="url">health.console…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">💰</span> 支付宝开放平台 <span class="url">open.alipay.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔍</span> Search Console <span class="url">search.google.com</span></a></li>
+          </ul>
+        </article>
+
+        <!-- 网络检测 -->
+        <article class="glass card" data-cat="network">
+          <div class="card-header">
+            <div>
+              <div class="card-title">网络检测</div>
+              <div class="card-desc">连通、泄露与证书</div>
+            </div>
+            <span class="card-count">10</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📡</span> Ping.pe <span class="url">ping.pe</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔒</span> SSL Labs <span class="url">ssllabs.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🕵️</span> BrowserLeaks <span class="url">browserleaks.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🌐</span> Whoer <span class="url">whoer.net</span></a></li>
+            <li><a class="link" href="#"><span class="icon">DNS</span> DNS Leak Test <span class="url">dnsleaktest.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📊</span> Cloudflare Status <span class="url">cloudflarestatus…</span></a></li>
+          </ul>
+        </article>
+
+        <!-- 项目与仓库 -->
+        <article class="glass card" data-cat="repo">
+          <div class="card-header">
+            <div>
+              <div class="card-title">项目与仓库</div>
+              <div class="card-desc">从书签里的常用仓库</div>
+            </div>
+            <span class="card-count">1</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📦</span> ev-open-can-tools <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔧</span> tesla-fsd-controller <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐳</span> nas-tools <span class="url">hub.docker.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📁</span> Aria2 + Rclone <span class="url">github.com</span></a></li>
+          </ul>
+        </article>
+
+        <!-- 云主机 -->
+        <article class="glass card" data-cat="cloud">
+          <div class="card-header">
+            <div>
+              <div class="card-title">云主机</div>
+              <div class="card-desc">服务器与主机面板</div>
+            </div>
+            <span class="card-count">8</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">🖥</span> 搬瓦工 <span class="url">bandwagonhost.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">⚡</span> RackNerd <span class="url">racknerd.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">☁</span> CloudCore <span class="url">cloudcore.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🚀</span> HostDare <span class="url">hostdare.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐧</span> 帕斯云 <span class="url">pasuyun.com</span></a></li>
+          </ul>
+        </article>
+
+        <!-- AI 与多媒体 -->
+        <article class="glass card" data-cat="ai">
+          <div class="card-header">
+            <div>
+              <div class="card-title">AI 与多媒体</div>
+              <div class="card-desc">模型与多媒体工具</div>
+            </div>
+            <span class="card-count">7</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">🤖</span> NVIDIA NIM <span class="url">build.nvidia.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📚</span> NVIDIA 培训 <span class="url">nvidia.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🧠</span> Jetson 认证 <span class="url">developer.nvidia…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🎨</span> 腾讯 ARC <span class="url">arc.tencent.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📁</span> PathUnfolder <span class="url">github.com</span></a></li>
+          </ul>
+        </article>
+
+        <!-- 学术文献 -->
+        <article class="glass card" data-cat="academic">
+          <div class="card-header">
+            <div>
+              <div class="card-title">学术文献</div>
+              <div class="card-desc">检索与期刊数据库</div>
+            </div>
+            <span class="card-count">8</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📖</span> 中国知网 <span class="url">cnki.net</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📄</span> LetPub <span class="url">letpub.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔬</span> ScienceDirect <span class="url">sciencedirect.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📊</span> Engineering Failure… <span class="url">sciencedirect…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🧪</span> J. Materials Processing… <span class="url">sciencedirect…</span></a></li>
+          </ul>
+        </article>
+      </div>
+
+      <p class="note">
+        Liquid Glass Demo · 工作页 · 纯 CSS 实现 · 可直接复制样式到你的项目
+      </p>
+    </main>
+  </div>
+</body>
+</html>
