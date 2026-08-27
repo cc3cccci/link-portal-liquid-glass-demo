@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Link Portal · Liquid Glass v2 (Closer Match)</title>
+  <style>
+    /* ========== Reset ========== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      color: #1c1c1e;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ========== Background ========== */
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(255,255,255,0.25) 0%, transparent 50%),
+        url('https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&q=85') center/cover no-repeat fixed;
+      background-color: #8ab4c8;
+    }
+
+    /* ========== Layout ========== */
+    .portal {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 22px;
+      max-width: 1380px;
+      margin: 0 auto;
+      padding: 26px 30px 50px;
+      min-height: 100vh;
+    }
+
+    /* ========== Liquid Glass Core (v2 – much closer to reference) ========== */
+    :root {
+      --blur: 40px;
+      --saturate: 1.6;
+      --glass: rgba(255, 255, 255, 0.48);
+      --glass-strong: rgba(255, 255, 255, 0.62);
+      --border: rgba(255, 255, 255, 0.78);
+      --radius: 24px;
+      --cat-work: #f0a020;
+      --cat-network: #00b4e4;
+      --cat-repo: #00b84a;
+      --cat-ai: #9a55c0;
+      --cat-academic: #f25b5b;
+      --cat-cloud: #9b5de5;
+    }
+
+    /* The key Liquid Glass material */
+    .liquid-glass {
+      position: relative;
+      background: var(--glass);
+      backdrop-filter: blur(var(--blur)) saturate(var(--saturate)) brightness(1.05);
+      -webkit-backdrop-filter: blur(var(--blur)) saturate(var(--saturate)) brightness(1.05);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+
+      /* Multi-layer shadows for thickness + floating feel */
+      box-shadow:
+        /* soft ambient */
+        0 10px 40px rgba(0, 0, 0, 0.10),
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        /* top specular highlight (very important) */
+        0 1.5px 0 0 rgba(255, 255, 255, 0.95) inset,
+        /* subtle bottom inner shadow for glass thickness */
+        0 -1.5px 0 0 rgba(0, 0, 0, 0.05) inset,
+        /* soft outer glow (simulates light refraction) */
+        0 0 0 1px rgba(255, 255, 255, 0.25);
+
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+                  box-shadow 0.4s ease,
+                  background 0.3s ease;
+      overflow: hidden;
+    }
+
+    /* Extra top highlight bar (more Apple-like) */
+    .liquid-glass::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 12%;
+      right: 12%;
+      height: 1px;
+      background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255,255,255,0.95) 30%,
+        rgba(255,255,255,1) 50%,
+        rgba(255,255,255,0.95) 70%,
+        transparent 100%);
+      border-radius: 1px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Soft light reflection on top-left */
+    .liquid-glass::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 60%;
+      height: 40%;
+      background: linear-gradient(135deg,
+        rgba(255,255,255,0.35) 0%,
+        rgba(255,255,255,0.08) 40%,
+        transparent 70%);
+      border-radius: var(--radius) 0 0 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .liquid-glass:hover {
+      transform: translateY(-4px) scale(1.01);
+      background: rgba(255, 255, 255, 0.58);
+      box-shadow:
+        0 18px 50px rgba(0, 0, 0, 0.14),
+        0 4px 12px rgba(0, 0, 0, 0.06),
+        0 1.5px 0 0 rgba(255, 255, 255, 1) inset,
+        0 -1.5px 0 0 rgba(0, 0, 0, 0.05) inset,
+        0 0 0 1px rgba(255, 255, 255, 0.4);
+    }
+
+    /* ========== Sidebar ========== */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      position: sticky;
+      top: 26px;
+      height: fit-content;
+    }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      padding: 5px;
+      border-radius: 999px;
+    }
+
+    .tab {
+      flex: 1;
+      padding: 9px 0;
+      text-align: center;
+      border-radius: 999px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #4a4a4a;
+      transition: all 0.25s;
+    }
+
+    .tab.active {
+      background: rgba(255,255,255,0.88);
+      color: #1c1c1e;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+    }
+
+    .nav {
+      list-style: none;
+      padding: 6px 4px;
+    }
+
+    .nav li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 9px 14px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .nav li:hover { background: rgba(255,255,255,0.4); }
+
+    .nav .count {
+      font-size: 11px;
+      color: #6a6a6a;
+      background: rgba(0,0,0,0.05);
+      padding: 1px 7px;
+      border-radius: 999px;
+    }
+
+    /* ========== Main area ========== */
+    .main {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+
+    .clock {
+      font-size: 52px;
+      font-weight: 200;
+      letter-spacing: -2px;
+      color: #fff;
+      text-shadow: 0 2px 16px rgba(0,0,0,0.3);
+      line-height: 1;
+    }
+
+    .search {
+      flex: 1;
+      min-width: 260px;
+      max-width: 480px;
+      padding: 13px 20px;
+      border-radius: 999px;
+      font-size: 14.5px;
+      border: 1px solid rgba(255,255,255,0.75);
+      background: rgba(255,255,255,0.58);
+      backdrop-filter: blur(28px) saturate(1.5);
+      -webkit-backdrop-filter: blur(28px) saturate(1.5);
+      color: #1c1c1e;
+      outline: none;
+      box-shadow:
+        0 4px 18px rgba(0,0,0,0.07),
+        0 1px 0 rgba(255,255,255,0.9) inset;
+    }
+
+    .search::placeholder { color: #7a7a7a; }
+
+    .shortcuts {
+      padding: 10px 14px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .shortcuts span {
+      font-size: 12.5px;
+      color: #4a4a4a;
+      margin-right: 2px;
+    }
+
+    .dot {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.65);
+      border: 1px solid rgba(255,255,255,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .dot:hover { transform: scale(1.15); }
+
+    /* ========== Cards ========== */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      padding: 16px 18px 14px;
+    }
+
+    /* Category accent + soft color wash (closer to reference) */
+    .card[data-cat="work"] {
+      border-left: 3.5px solid var(--cat-work);
+      background:
+        linear-gradient(90deg, rgba(240,160,32,0.16) 0%, rgba(240,160,32,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+    .card[data-cat="network"] {
+      border-left: 3.5px solid var(--cat-network);
+      background:
+        linear-gradient(90deg, rgba(0,180,228,0.16) 0%, rgba(0,180,228,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+    .card[data-cat="repo"] {
+      border-left: 3.5px solid var(--cat-repo);
+      background:
+        linear-gradient(90deg, rgba(0,184,74,0.16) 0%, rgba(0,184,74,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+    .card[data-cat="ai"] {
+      border-left: 3.5px solid var(--cat-ai);
+      background:
+        linear-gradient(90deg, rgba(154,85,192,0.16) 0%, rgba(154,85,192,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+    .card[data-cat="academic"] {
+      border-left: 3.5px solid var(--cat-academic);
+      background:
+        linear-gradient(90deg, rgba(242,91,91,0.16) 0%, rgba(242,91,91,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+    .card[data-cat="cloud"] {
+      border-left: 3.5px solid var(--cat-cloud);
+      background:
+        linear-gradient(90deg, rgba(155,93,229,0.16) 0%, rgba(155,93,229,0.04) 35%, transparent 55%),
+        var(--glass);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 11px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .card-title {
+      font-size: 15.5px;
+      font-weight: 650;
+      color: #1c1c1e;
+    }
+
+    .card-desc {
+      font-size: 11.5px;
+      color: #5a5a5a;
+      margin-top: 1px;
+    }
+
+    .card-count {
+      font-size: 11px;
+      color: #6a6a6a;
+      background: rgba(0,0,0,0.05);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .links {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      position: relative;
+      z-index: 3;
+    }
+
+    .link {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 9px;
+      border-radius: 11px;
+      text-decoration: none;
+      color: #1c1c1e;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .link:hover {
+      background: rgba(255,255,255,0.5);
+    }
+
+    .link .icon {
+      width: 20px;
+      height: 20px;
+      border-radius: 5px;
+      background: rgba(0,0,0,0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      flex-shrink: 0;
+    }
+
+    .link .url {
+      margin-left: auto;
+      font-size: 10.5px;
+      color: #7a7a7a;
+      max-width: 100px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .note {
+      text-align: center;
+      font-size: 12.5px;
+      color: rgba(255,255,255,0.9);
+      text-shadow: 0 1px 6px rgba(0,0,0,0.35);
+      margin-top: 8px;
+    }
+
+    @media (max-width: 900px) {
+      .portal { grid-template-columns: 1fr; padding: 16px; }
+      .sidebar { position: static; }
+      .clock { font-size: 38px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="portal">
+    <aside class="sidebar">
+      <div class="liquid-glass tabs">
+        <button class="tab active">工作</button>
+        <button class="tab">生活</button>
+      </div>
+      <div class="liquid-glass" style="padding: 8px 4px;">
+        <ul class="nav">
+          <li><span>工作台</span><span class="count">77</span></li>
+          <li><span>日常工作</span><span class="count">7</span></li>
+          <li><span>云主机</span><span class="count">8</span></li>
+          <li><span>网络检测</span><span class="count">10</span></li>
+          <li><span>项目与仓库</span><span class="count">1</span></li>
+          <li><span>AI与多媒体</span><span class="count">7</span></li>
+          <li><span>学术文献</span><span class="count">8</span></li>
+        </ul>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="top-bar">
+        <div class="clock">23:56</div>
+        <input class="search" type="text" placeholder="搜索工作工具，回车用 Google 打开…" />
+        <div class="liquid-glass shortcuts">
+          <span>工作快捷</span>
+          <div class="dot">⚡</div>
+          <div class="dot">🔗</div>
+          <div class="dot">📊</div>
+          <div class="dot">🛠</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <article class="liquid-glass card" data-cat="work">
+          <div class="card-header">
+            <div>
+              <div class="card-title">日常工作</div>
+              <div class="card-desc">每天会打开的控制台</div>
+            </div>
+            <span class="card-count">7</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">☁️</span> Cloudflare <span class="url">dash.cloudflare.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐙</span> GitHub <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🅰️</span> 阿里云控制台 <span class="url">console.aliyun.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">💚</span> 阿里云健康 <span class="url">health.console…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">💰</span> 支付宝开放平台 <span class="url">open.alipay.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔍</span> Search Console <span class="url">search.google.com</span></a></li>
+          </ul>
+        </article>
+
+        <article class="liquid-glass card" data-cat="network">
+          <div class="card-header">
+            <div>
+              <div class="card-title">网络检测</div>
+              <div class="card-desc">连通、泄露与证书</div>
+            </div>
+            <span class="card-count">10</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📡</span> Ping.pe <span class="url">ping.pe</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔒</span> SSL Labs <span class="url">ssllabs.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🕵️</span> BrowserLeaks <span class="url">browserleaks.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🌐</span> Whoer <span class="url">whoer.net</span></a></li>
+            <li><a class="link" href="#"><span class="icon">DNS</span> DNS Leak Test <span class="url">dnsleaktest.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📊</span> Cloudflare Status <span class="url">cloudflarestatus…</span></a></li>
+          </ul>
+        </article>
+
+        <article class="liquid-glass card" data-cat="repo">
+          <div class="card-header">
+            <div>
+              <div class="card-title">项目与仓库</div>
+              <div class="card-desc">从书签里的常用仓库</div>
+            </div>
+            <span class="card-count">1</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📦</span> ev-open-can-tools <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔧</span> tesla-fsd-controller <span class="url">github.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐳</span> nas-tools <span class="url">hub.docker.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📁</span> Aria2 + Rclone <span class="url">github.com</span></a></li>
+          </ul>
+        </article>
+
+        <article class="liquid-glass card" data-cat="cloud">
+          <div class="card-header">
+            <div>
+              <div class="card-title">云主机</div>
+              <div class="card-desc">服务器与主机面板</div>
+            </div>
+            <span class="card-count">8</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">🖥</span> 搬瓦工 <span class="url">bandwagonhost.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">⚡</span> RackNerd <span class="url">racknerd.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">☁</span> CloudCore <span class="url">cloudcore.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🚀</span> HostDare <span class="url">hostdare.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🐧</span> 帕斯云 <span class="url">pasuyun.com</span></a></li>
+          </ul>
+        </article>
+
+        <article class="liquid-glass card" data-cat="ai">
+          <div class="card-header">
+            <div>
+              <div class="card-title">AI 与多媒体</div>
+              <div class="card-desc">模型与多媒体工具</div>
+            </div>
+            <span class="card-count">7</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">🤖</span> NVIDIA NIM <span class="url">build.nvidia.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📚</span> NVIDIA 培训 <span class="url">nvidia.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🧠</span> Jetson 认证 <span class="url">developer.nvidia…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🎨</span> 腾讯 ARC <span class="url">arc.tencent.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📁</span> PathUnfolder <span class="url">github.com</span></a></li>
+          </ul>
+        </article>
+
+        <article class="liquid-glass card" data-cat="academic">
+          <div class="card-header">
+            <div>
+              <div class="card-title">学术文献</div>
+              <div class="card-desc">检索与期刊数据库</div>
+            </div>
+            <span class="card-count">8</span>
+          </div>
+          <ul class="links">
+            <li><a class="link" href="#"><span class="icon">📖</span> 中国知网 <span class="url">cnki.net</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📄</span> LetPub <span class="url">letpub.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🔬</span> ScienceDirect <span class="url">sciencedirect.com</span></a></li>
+            <li><a class="link" href="#"><span class="icon">📊</span> Engineering Failure… <span class="url">sciencedirect…</span></a></li>
+            <li><a class="link" href="#"><span class="icon">🧪</span> J. Materials Processing… <span class="url">sciencedirect…</span></a></li>
+          </ul>
+        </article>
+      </div>
+
+      <p class="note">Liquid Glass v2 · 更接近参考图的高光 / 阴影 / 折射感 · 纯 CSS</p>
+    </main>
+  </div>
+</body>
+</html>
